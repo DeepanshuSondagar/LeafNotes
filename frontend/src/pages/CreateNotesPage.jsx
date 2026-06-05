@@ -1,0 +1,99 @@
+import { ArrowLeftIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+import { Link, useNavigate } from "react-router-dom";
+import api from "../lib/axios"; 
+
+
+const CreateNotesPage = () => {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleSubmit = async(e) => {
+      e.preventDefault();
+      if( !title.trim() || !content.trim()){
+        toast.error("All field are required")
+        return;
+      }
+      setLoading(true);
+      try {
+        await api.post("/notes", {title, content});
+        toast.success("Notes created successfully");
+         navigate("/notes");
+      } catch (error) {
+          console.log("Error creating note", error);
+            if(error.response.status === 429){
+          toast.error("Slow down! You're creating notes too fast",{
+            duration:4000,
+            icon:"💀"
+          });
+        }else{
+          toast.error("Failed to create note");
+        }
+    } finally{
+      setLoading(false)
+    }
+  } ;
+
+     
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-black">
+      <div className="container mx-auto px-4 py-8 mt-5">
+        <div className="max-w-2xl mx-auto">
+          <Link to={"/notes"} className="mb-6 text-white flex items-center gap-2 hover:text-green-400 transition">
+            <ArrowLeftIcon className="size-5"/>
+            Back to notes
+          </Link>
+
+          <div className="bg-[#111827] py-8 px-8 shadow rounded-2xl">
+            <h2 className="text-2xl font-bold mb-6 text-white">
+              Create New Note
+            </h2>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  placeholder="Note Title"
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-full text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Content
+                </label>
+                <textarea
+                  placeholder="Write your note here..."
+                  rows={6}
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-full transition duration-300"
+                >
+                  {loading ? "Saving..." : "Create Note"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateNotesPage;
